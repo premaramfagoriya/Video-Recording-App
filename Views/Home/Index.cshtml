@@ -1,0 +1,334 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Recording App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .btn-record {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .video-container {
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        #video-preview {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+        .permission-section {
+            text-align: center;
+            padding: 30px;
+        }
+        .permission-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #0d6efd;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">RecordingApp</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <!-- User Info Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card" id="user-info-section">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Enter Your Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="user-info-form">
+                            <div class="mb-3">
+                                <label for="userName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="userName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="userEmail" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="userEmail" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Continue to Recording</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Permission Section -->
+        <div class="row justify-content-center hidden" id="camera-permission-section">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body permission-section">
+                        <div class="permission-icon">
+                            <i class="bi bi-camera-video"></i>
+                        </div>
+                        <h4>Camera Access Required</h4>
+                        <p>To record video, we need access to your camera. Please allow camera access when prompted.</p>
+                        <button class="btn btn-primary" id="request-camera-btn">Allow Camera Access</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recording Interface -->
+        <div class="row justify-content-center hidden" id="recording-section">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Recording Interface</h5>
+                        <span class="badge bg-light text-dark" id="user-info-badge">User: <span id="display-user-name"></span></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="video-container">
+                            <video id="video-preview" autoplay muted></video>
+                        </div>
+                        <div class="text-center">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-danger btn-record" id="start-recording">
+                                    <i class="bi bi-record-circle"></i>
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="stop-recording" disabled>
+                                    <i class="bi bi-stop-circle"></i> Stop
+                                </button>
+                                <button type="button" class="btn btn-success" id="download-recording" disabled>
+                                    <i class="bi bi-download"></i> Download
+                                </button>
+                                <button type="button" class="btn btn-primary" id="save-recording">
+                                    <i class="bi bi-save"></i> Save to Server
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="progress">
+                                <div class="progress-bar" id="recording-timer" role="progressbar" style="width: 0%">0:00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="row justify-content-center hidden" id="success-section">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="permission-icon text-success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <h4>Recording Saved Successfully!</h4>
+                        <p>Your video has been saved to our servers and is now available for administrators to review.</p>
+                        <button class="btn btn-primary" id="new-recording-btn">Start New Recording</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <p class="mb-0">RecordingApp &copy; 2023. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // DOM Elements
+        const userInfoSection = document.getElementById('user-info-section');
+        const cameraPermissionSection = document.getElementById('camera-permission-section');
+        const recordingSection = document.getElementById('recording-section');
+        const successSection = document.getElementById('success-section');
+        const userInfoForm = document.getElementById('user-info-form');
+        const requestCameraBtn = document.getElementById('request-camera-btn');
+        const videoPreview = document.getElementById('video-preview');
+        const startRecordingBtn = document.getElementById('start-recording');
+        const stopRecordingBtn = document.getElementById('stop-recording');
+        const downloadRecordingBtn = document.getElementById('download-recording');
+        const saveRecordingBtn = document.getElementById('save-recording');
+        const recordingTimer = document.getElementById('recording-timer');
+        const displayUserName = document.getElementById('display-user-name');
+        const newRecordingBtn = document.getElementById('new-recording-btn');
+
+        // State variables
+        let mediaRecorder;
+        let recordedChunks = [];
+        let recordingTimerInterval;
+        let recordingSeconds = 0;
+        let userName = '';
+        let userEmail = '';
+
+        // Event Listeners
+        userInfoForm.addEventListener('submit', handleUserInfoSubmit);
+        requestCameraBtn.addEventListener('click', requestCameraAccess);
+        startRecordingBtn.addEventListener('click', startRecording);
+        stopRecordingBtn.addEventListener('click', stopRecording);
+        downloadRecordingBtn.addEventListener('click', downloadRecording);
+        saveRecordingBtn.addEventListener('click', saveRecording);
+        newRecordingBtn.addEventListener('click', resetApp);
+
+        // Handle user info form submission
+        function handleUserInfoSubmit(e) {
+            e.preventDefault();
+            userName = document.getElementById('userName').value;
+            userEmail = document.getElementById('userEmail').value;
+
+            // Show camera permission section
+            userInfoSection.classList.add('hidden');
+            cameraPermissionSection.classList.remove('hidden');
+            displayUserName.textContent = userName;
+        }
+
+        // Request camera access
+        function requestCameraAccess() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                    .then(function(stream) {
+                        videoPreview.srcObject = stream;
+                        cameraPermissionSection.classList.add('hidden');
+                        recordingSection.classList.remove('hidden');
+
+                        // Set up media recorder
+                        mediaRecorder = new MediaRecorder(stream);
+
+                        mediaRecorder.ondataavailable = function(e) {
+                            if (e.data.size > 0) {
+                                recordedChunks.push(e.data);
+                            }
+                        };
+
+                        mediaRecorder.onstop = function() {
+                            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                            const recordingURL = URL.createObjectURL(blob);
+                            downloadRecordingBtn.disabled = false;
+                            downloadRecordingBtn.onclick = function() {
+                                const a = document.createElement('a');
+                                a.href = recordingURL;
+                                a.download = `${userName}_recording_${new Date().toISOString().replace(/:/g, '-')}.webm`;
+                                a.click();
+                            };
+                        };
+                    })
+                    .catch(function(err) {
+                        console.error('Error accessing media devices:', err);
+                        alert('Error accessing camera and microphone. Please ensure you have granted permission.');
+                    });
+            } else {
+                alert('Your browser does not support video recording. Please use a modern browser like Chrome, Firefox, or Edge.');
+            }
+        }
+
+        // Start recording
+        function startRecording() {
+            recordedChunks = [];
+            mediaRecorder.start();
+            startRecordingBtn.disabled = true;
+            stopRecordingBtn.disabled = false;
+            downloadRecordingBtn.disabled = true;
+
+            // Start timer
+            recordingSeconds = 0;
+            recordingTimerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // Stop recording
+        function stopRecording() {
+            mediaRecorder.stop();
+            startRecordingBtn.disabled = false;
+            stopRecordingBtn.disabled = true;
+
+            // Stop timer
+            clearInterval(recordingTimerInterval);
+        }
+
+        // Update recording timer
+        function updateTimer() {
+            recordingSeconds++;
+            const minutes = Math.floor(recordingSeconds / 60);
+            const seconds = recordingSeconds % 60;
+            recordingTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            recordingTimer.style.width = `${Math.min(recordingSeconds / 60 * 100, 100)}%`;
+
+            // Change progress bar color based on recording length
+            if (recordingSeconds > 45) {
+                recordingTimer.classList.remove('bg-success');
+                recordingTimer.classList.add('bg-warning');
+            }
+            if (recordingSeconds > 55) {
+                recordingTimer.classList.remove('bg-warning');
+                recordingTimer.classList.add('bg-danger');
+            }
+        }
+
+        // Download recording
+        function downloadRecording() {
+            // Handled in the mediaRecorder.onstop event
+        }
+
+        // Save recording to server
+        function saveRecording() {
+            // Show loading state
+            saveRecordingBtn.disabled = true;
+            saveRecordingBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+            // In a real application, this would send the recording to the server
+            // For this demo, we'll simulate a server request
+            setTimeout(() => {
+                recordingSection.classList.add('hidden');
+                successSection.classList.remove('hidden');
+
+                // Here you would normally send the recording to your server
+                // along with user information using an AJAX request or form submission
+                console.log('Recording saved for user:', userName, userEmail);
+            }, 2000);
+        }
+
+        // Reset application for a new recording
+        function resetApp() {
+            successSection.classList.add('hidden');
+            userInfoSection.classList.remove('hidden');
+
+            // Reset form
+            userInfoForm.reset();
+
+            // Reset recording state
+            recordedChunks = [];
+            recordingSeconds = 0;
+            recordingTimer.textContent = '0:00';
+            recordingTimer.style.width = '0%';
+            recordingTimer.classList.remove('bg-warning', 'bg-danger');
+            recordingTimer.classList.add('bg-success');
+
+            // Stop media stream
+            if (videoPreview.srcObject) {
+                videoPreview.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
+    </script>
+</body>
+</html>
